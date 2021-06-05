@@ -1,4 +1,3 @@
-
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
@@ -14,66 +13,91 @@ class Bank {
         this.clients.push(client);
     }
     showClientsSaldos() {
-        for (let client in this.clients) {
-            const name = document.createElement("span");
-            let secondName = (this.clients[client].surname) ? (" " + this.clients[client].surname) : "";
-            name.innerHTML = this.clients[client].name + secondName + "</br> -------------- </br> ";
-            body.append(name);
-            console.log(this.clients[client].name + secondName);
-            for (let account in this.clients[client].accounts) {
-                const acc = document.createElement("span");
-                acc.innerHTML = "Account " + account + ": saldo: " + this.clients[client].accounts[account].saldo + "</br >";
-                name.append(acc);
-                console.log("Account " + account + ": saldo: " + this.clients[client].accounts[account].saldo);
-                console.log("-------");
-            } const end = document.createElement("span");
-            end.innerHTML = "-------------------------------------------------</br></br></br>";
-            body.append(end);
 
+        for (let client of this.clients) {
+            const name = document.createElement("span");
+
+            if (client.surname) {
+                console.log(client.name + ' ' + client.surname);
+                name.innerHTML = client.name + ' ' + client.surname + "</br>";
+                body.append(name);
+            } else {
+                console.log(client.name);
+                name.innerHTML = client.name + "</br>";
+                body.append(name);
+            }
+
+            for (let account of client.accounts) {
+                const acc = document.createElement("span");
+                console.log(account.saldo);
+                acc.innerHTML = account.saldo + "</br>";
+                body.append(acc);
+            }
         }
+        const end = document.createElement("span");
+        end.innerHTML = "-----------</br>";
+        body.append(end);
     }
 }
+
 
 class Account {
     constructor(saldo) {
         this.saldo = saldo;
+        this.type = "DEF";
     }
-    getMoney(ammount) {
-        this.saldo -= ammount;
+
+    addMoney(amount) {
+        this.saldo += amount;
+        const SAL = document.createElement("span");
+        SAL.innerHTML = "Konto typu:" + this.type + " | Wpłacono: " + amount + " | Saldo końcowe: " + this.saldo + "</br>";
+        body.append(SAL);
     }
-    addMoney(ammount) {
-        this.saldo += ammount;
+    withdrawMoney(amount) {
+        this.saldo -= amount;
+        const SAL = document.createElement("span");
+        SAL.innerHTML = "Konto typu:" + this.type + " | Wypłacono: " + amount + "</br>";
+        body.append(SAL);
     }
     get getSaldo() {
         return console.log(this.saldo.toFixed(2));
     }
-    addMoney(amount) {
-        this.money += amount;
-    }
-    withdrawMoney(amount) {
-        this.money -= amount;
-    };
 }
 
 class AccountVIP extends Account {
     constructor(saldo, provise) {
         super(saldo);
         this.provise = provise;
+        this.type = "VIP";
     }
     addMoney(amount) {
         this.saldo += amount - this.provise;
+        const SAL = document.createElement("span");
+        SAL.innerHTML = "Konto typu:" + this.type + " | Wpłacono: " + amount + "| Saldo końcowe: " + this.saldo + " (Prowizja: -" + this.provise + ")</br> ";
+        body.append(SAL);
+
     }
     withdrawMoney(amount) {
         this.saldo -= amount + this.provise;
+        const SAL = document.createElement("span");
+        SAL.innerHTML = "Konto typu:" + this.type + " | Wypłacono: " + amount + "| Saldo końcowe: " + this.saldo + " (Prowizja: -" + this.provise + ")</br> ";
+        body.append(SAL);
     };
 }
 
 class AccountVAL extends Account {
-    constructor(saldo) {
+    constructor(saldo, val) {
         super(saldo);
+        this.val = val;
+        this.type = "VAL";
     }
     get getSaldo() {
-        return console.log(this.saldo.toFixed(2) + "PLN");
+        return console.log(this.saldo.toFixed(2) + this.val);
+    }
+    withdrawMoney(amount) {
+        const SAL = document.createElement("span");
+        SAL.innerHTML = "Konto typu:" + this.type + " | Wypłacono: " + amount + " " + this.val + "</br>";
+        body.append(SAL);
     }
 }
 
@@ -123,10 +147,10 @@ bank.addClient(client4);
 bank.addClient(client5);
 
 let acc1 = new AccountVIP(0, 5);
-let acc2 = new AccountVAL(0);
+let acc2 = new AccountVAL(0, "RUB");
 let acc3 = new Account(0);
-let acc4 = new AccountVAL(0);
-let acc5 = new AccountVAL(0);
+let acc4 = new AccountVAL(0, "EUR");
+let acc5 = new AccountVAL(0, "YEN");
 let acc6 = new AccountVIP(0, 10);
 let acc7 = new Account(0);
 let acc8 = new AccountVIP(0, 12);
@@ -150,41 +174,75 @@ function randSum() {
     return sum;
 }
 
-//wpłać losową sumę (do 1000) na każde konto i wypisz stan banku (wszystkich klientów oraz ich konta wraz z saldem)
-function addRandSum() {
-    for (let client in bank.clients) {
-        for (let account in bank.clients[client].accounts) {
-            bank.clients[client].accounts[account].saldo += randSum();
+//1. wpłać losową sumę (do 1000) na każde konto i wypisz stan banku (wszystkich klientów oraz ich konta wraz z saldem)
+function addRandSumToAllAccounts(bank) {
+    for (let client of bank.clients) {
+        for (let account of client.accounts) {
+            account.addMoney(randSum());
+            console.log(account);
         }
     }
+    console.log("--------");
 }
 
-//wpłać 100 na pierwsze konto każdej Osoby;
-function add100toFirstAcc() {
-    for (let client in bank.clients) {
-        if (bank.clients[client] instanceof Person) {
-            console.log(bank.clients[client]);
-            bank.clients[client].accounts[0].saldo += 100;
-
-        };
+//2. wpłać 100 na pierwsze konto każdej Osoby;
+function add100toFirstAccOfPerson(bank) {
+    for (let client of bank.clients) {
+        if (client instanceof Person) {
+            client.accounts[0].addMoney(100);
+            console.log(client.accounts[0]);
+        }
     }
+    console.log("--------");
 }
 
-function add50toVIPAcc() {
-    for (let client in bank.clients) {
-        for (let account in bank.clients[client].accounts) {
-            if (bank.clients[client].accounts[account] instanceof AccountVIP) {
-                console.log(bank.clients[client].name, bank.clients[client].accounts[account]);
-                bank.clients[client].accounts[account].saldo += 50;
-
+//3. wpłać 50 na każde konto VIP
+function add50ToEveryVIPAcc(bank) {
+    for (let client of bank.clients) {
+        for (let account of client.accounts) {
+            if (account instanceof AccountVIP) {
+                account.addMoney(50);
+                console.log("VIP", account);
             }
         }
     }
 }
 
-addRandSum();
-bank.showClientsSaldos();
-add100toFirstAcc();
-bank.showClientsSaldos();
-add50toVIPAcc();
-bank.showClientsSaldos();
+//4. wypłać 25 z kont walutowych prowadzonych w Euro
+function withdrawFromEuroAcc(bank) {
+    for (let client of bank.clients) {
+        for (let account of client.accounts) {
+            if (account.val === "EUR") {
+                account.withdrawMoney(25);
+            }
+        }
+    }
+}
+
+//5. wypłać 200 z VIP - owych kont każdej Firmy, o ile stan tego konta wynosi co najmniej 200
+function withdraw200formVIPandFirmACC(bank) {
+    for (let client of bank.clients) {
+        if (client instanceof Firm) {
+            for (let account of client.accounts) {
+                if (account instanceof AccountVIP && account.saldo > 200) {
+                    console.log(">200");
+                    account.withdrawMoney(200);
+                }
+            }
+        }
+    }
+}
+
+//1
+addRandSumToAllAccounts(bank);
+// bank.showClientsSaldos();
+//2
+add100toFirstAccOfPerson(bank);
+// // bank.showClientsSaldos();
+//3
+add50ToEveryVIPAcc(bank);
+// // bank.showClientsSaldos();
+//4
+withdrawFromEuroAcc(bank);
+//5
+withdraw200formVIPandFirmACC(bank);
